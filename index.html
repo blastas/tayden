@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a24">
+  <title>TAYDEN Rulet</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --night: #101714;
+      --panel: #19231f;
+      --panel-light: #202d27;
+      --felt: #14563e;
+      --felt-dark: #104632;
+      --gold: #e5bd72;
+      --cream: #f2ead8;
+      --muted: #9ba99e;
+      --line: #344239;
+      --red: #b94040;
+      --black: #17201c;
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      color: var(--cream);
+      background-color: var(--night);
+      background-image: radial-gradient(ellipse at 50% -15%, #26372d 0, transparent 54%), repeating-linear-gradient(135deg, #ffffff04 0 1px, transparent 1px 8px);
+    }
+    button { font: inherit; color: inherit; }
+    .shell { width: min(1240px, calc(100% - 40px)); margin: 0 auto; }
+    header {
+      height: 76px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ffffff14;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 800; letter-spacing: 2px; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--gold); color: var(--gold); border-radius: 50%; font-family: Georgia, serif; font-size: 18px; letter-spacing: 0; }
+    .wallet { display: flex; align-items: center; gap: 14px; }
+    .wallet-label { color: var(--muted); font-size: 11px; letter-spacing: 1.3px; text-transform: uppercase; }
+    .wallet-value { min-width: 128px; text-align: right; color: var(--gold); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    main { padding: 34px 0 48px; }
+    .heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 24px; }
+    .eyebrow { margin: 0 0 7px; color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase; }
+    h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(27px, 4vw, 39px); font-weight: 500; }
+    .round-label { color: var(--muted); font-size: 12px; }
+    .game-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+    .table-panel, .side-panel { border: 1px solid #ffffff12; border-radius: 8px; background: #19231fe8; box-shadow: 0 18px 55px #00000024; }
+    .table-panel { padding: 22px; }
+    .table-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .section-label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+    .chip-picker { display: flex; align-items: center; gap: 8px; }
+    .chip {
+      width: 48px; height: 48px; padding: 0; border: 2px dashed #e8d8ae; border-radius: 50%;
+      background: #2c3931; color: #f4e9ce; font-size: 11px; font-weight: 800; cursor: pointer;
+      box-shadow: inset 0 0 0 3px #2c3931, inset 0 0 0 4px #e8d8ae66; transition: transform .15s, background .15s;
+    }
+    .chip:hover { transform: translateY(-2px); }
+    .chip.active { background: #a47735; color: white; box-shadow: inset 0 0 0 3px #a47735, inset 0 0 0 4px #f4dfaa; }
+    .roulette-board { display: grid; grid-template-columns: 52px repeat(12, minmax(27px, 1fr)); grid-template-rows: repeat(3, 48px); gap: 4px; padding: 12px; border: 1px solid #d8bc7a66; border-radius: 5px; background: linear-gradient(145deg, var(--felt), var(--felt-dark)); }
+    .number-cell, .zero-cell, .outside-bet {
+      border: 1px solid #ffffff36; border-radius: 3px; cursor: pointer; transition: filter .15s, transform .15s, box-shadow .15s;
+    }
+    .number-cell:hover, .zero-cell:hover, .outside-bet:hover { filter: brightness(1.23); transform: translateY(-1px); }
+    .number-cell { position: relative; display: grid; place-items: center; min-width: 0; padding: 0; font-size: 13px; font-weight: 700; }
+    .number-cell.red, .outside-bet.red { background: var(--red); }
+    .number-cell.black, .outside-bet.black { background: var(--black); }
+    .zero-cell { grid-column: 1; grid-row: 1 / 4; background: #247147; font-weight: 800; font-size: 16px; }
+    .bet-mark { position: absolute; right: 2px; bottom: 2px; display: grid; place-items: center; width: 17px; height: 17px; border: 1px solid #f4d99b; border-radius: 50%; color: #fff; background: #a47735; font-size: 8px; line-height: 1; }
+    .outside-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-top: 4px; }
+    .outside-bet { min-height: 38px; padding: 5px 3px; border-color: #ffffff36; background: #174d39; font-size: 10px; font-weight: 700; }
+    .outside-bet.dozen { grid-column: span 2; }
+    .outside-bet.selected { box-shadow: inset 0 0 0 2px var(--gold); }
+    .bet-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 19px; }
+    .bet-summary { color: var(--muted); font-size: 12px; }
+    .bet-summary strong { color: var(--cream); font-size: 15px; font-variant-numeric: tabular-nums; }
+    .button-row { display: flex; gap: 8px; }
+    .action-button { min-height: 39px; padding: 0 13px; border: 1px solid var(--line); border-radius: 4px; background: #222e28; color: var(--cream); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .action-button:hover:not(:disabled) { border-color: #879385; }
+    .action-button:disabled { opacity: .4; cursor: not-allowed; }
+    .spin-button { min-width: 126px; border-color: var(--gold); background: var(--gold); color: #1b211a; }
+    .spin-button:hover:not(:disabled) { background: #f0ce8b; }
+    .side-panel { overflow: hidden; }
+    .result-area { display: grid; justify-items: center; padding: 23px 18px 19px; border-bottom: 1px solid #ffffff12; }
+    .wheel { position: relative; display: grid; place-items: center; width: 170px; aspect-ratio: 1; margin: 18px 0 16px; border: 8px solid #a77b3d; border-radius: 50%; background: repeating-conic-gradient(from -5deg, #b94040 0deg 9.72deg, #17201c 9.72deg 19.44deg, #b94040 19.44deg 29.16deg, #17201c 29.16deg 38.88deg, #247147 38.88deg 48.6deg); box-shadow: 0 0 0 3px #d9bd7c55, inset 0 0 0 12px #111914, 0 12px 28px #0008; }
+    .wheel::before { position: absolute; inset: 34px; border: 1px solid #c2a76e; border-radius: 50%; content: ""; }
+    .wheel-center { z-index: 1; display: grid; place-items: center; width: 54px; height: 54px; border: 2px solid #d4b674; border-radius: 50%; background: #17201c; color: var(--gold); font-family: Georgia, serif; font-size: 24px; }
+    .wheel.spinning { animation: spin 1.25s cubic-bezier(.12,.72,.16,1) both; }
+    @keyframes spin { to { transform: rotate(1080deg); } }
+    .result-caption { min-height: 18px; color: var(--muted); font-size: 11px; text-align: center; }
+    .result-caption.win { color: #9bd6a9; }
+    .result-caption.loss { color: #e49a8b; }
+    .history-area { padding: 17px 18px 19px; }
+    .history-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .history-count { color: #77867b; font-size: 10px; }
+    .history-list { display: flex; flex-wrap: wrap; gap: 7px; min-height: 31px; }
+    .history-number { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%; font-size: 11px; font-weight: 700; }
+    .history-number.red { background: var(--red); }
+    .history-number.black { background: var(--black); border: 1px solid #46534b; }
+    .history-number.green { background: #247147; }
+    .empty-history { color: #748178; font-size: 11px; }
+    .slip-area { padding: 17px 18px; border-top: 1px solid #ffffff12; }
+    .slip-head { display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .slip-list { display: grid; gap: 7px; max-height: 148px; overflow-y: auto; }
+    .slip-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #c7d0c8; font-size: 11px; }
+    .slip-item button { padding: 2px 5px; border: 0; background: transparent; color: #a3aea5; cursor: pointer; }
+    .slip-item button:hover { color: #fff; }
+    .slip-empty { color: #748178; font-size: 11px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    button:focus-visible { outline: 2px solid #f1cf8b; outline-offset: 2px; }
+    @media (max-width: 850px) {
+      .game-layout { grid-template-columns: minmax(0, 1fr) 250px; }
+      .roulette-board { grid-template-columns: 42px repeat(12, minmax(22px, 1fr)); padding: 8px; gap: 3px; }
+      .number-cell { font-size: 11px; }
+      .outside-bet { font-size: 9px; }
+    }
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 24px, 520px); }
+      header { height: 64px; }
+      .wallet-label { display: none; }
+      .wallet-value { min-width: auto; font-size: 17px; }
+      main { padding-top: 25px; }
+      .heading { align-items: center; }
+      .round-label { font-size: 10px; }
+      .game-layout { grid-template-columns: 1fr; }
+      .table-panel { padding: 14px 10px; }
+      .table-top { margin: 2px 2px 14px; }
+      .chip-picker { gap: 5px; }
+      .chip { width: 41px; height: 41px; font-size: 10px; }
+      .roulette-board { grid-template-columns: 34px repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(3, 42px); gap: 3px; padding: 7px; }
+      .number-cell { font-size: 10px; }
+      .bet-mark { width: 14px; height: 14px; font-size: 7px; }
+      .outside-grid { gap: 3px; }
+      .outside-bet { min-height: 36px; padding: 3px 1px; font-size: 8px; }
+      .bet-footer { align-items: flex-start; flex-direction: column; margin: 15px 2px 2px; }
+      .button-row { width: 100%; }
+      .action-button { flex: 1; padding: 0 8px; }
+      .spin-button { flex: 1.4; }
+      .side-panel { display: grid; grid-template-columns: 1fr 1fr; }
+      .result-area { grid-row: span 2; border-right: 1px solid #ffffff12; border-bottom: 0; }
+      .history-area { padding: 16px 12px; }
+      .slip-area { padding: 14px 12px; }
+      .wheel { width: 135px; }
+      .wheel-center { width: 46px; height: 46px; font-size: 21px; }
+    }
+    @media (max-width: 390px) {
+      .roulette-board { grid-template-rows: repeat(3, 37px); padding: 5px; }
+      .number-cell { font-size: 9px; }
+      .chip { width: 37px; height: 37px; }
+      .section-label { font-size: 9px; }
+      .wheel { width: 116px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand"><span class="brand-mark" aria-hidden="true">T</span><span>TAYDEN</span></div>
+      <div class="wallet"><span class="wallet-label">Bakiye</span><span id="balance" class="wallet-value" aria-live="polite">100.000 ₺</span></div>
+    </header>
+    <main>
+      <div class="heading">
+        <div><p class="eyebrow">Avrupa ruleti · tek sıfır</p><h1>TAYDEN Rulet</h1></div>
+        <div class="round-label">Tur <span id="round">01</span></div>
+      </div>
+      <div class="game-layout">
+        <section class="table-panel" aria-label="Rulet masası">
+          <div class="table-top">
+            <span class="section-label">Fiş seç</span>
+            <div class="chip-picker" role="group" aria-label="Bahis fişi">
+              <button class="chip active" data-chip="100" aria-pressed="true">100</button>
+              <button class="chip" data-chip="500" aria-pressed="false">500</button>
+              <button class="chip" data-chip="1000" aria-pressed="false">1K</button>
+              <button class="chip" data-chip="5000" aria-pressed="false">5K</button>
+            </div>
+          </div>
+          <div id="board" class="roulette-board" role="group" aria-label="Sayı bahisleri"></div>
+          <div class="outside-grid" role="group" aria-label="Dış bahisler">
+            <button class="outside-bet dozen" data-bet="dozen1">1. 12</button>
+            <button class="outside-bet dozen" data-bet="dozen2">2. 12</button>
+            <button class="outside-bet dozen" data-bet="dozen3">3. 12</button>
+            <button class="outside-bet" data-bet="low">1–18</button>
+            <button class="outside-bet" data-bet="even">ÇİFT</button>
+            <button class="outside-bet red" data-bet="red">KIRMIZI</button>
+            <button class="outside-bet black" data-bet="black">SİYAH</button>
+            <button class="outside-bet" data-bet="odd">TEK</button>
+            <button class="outside-bet" data-bet="high">19–36</button>
+          </div>
+          <div class="bet-footer">
+            <div class="bet-summary">Toplam bahis <strong id="total-bet">0 ₺</strong></div>
+            <div class="button-row">
+              <button id="undo" class="action-button" title="Son bahsi geri al" aria-label="Son bahsi geri al" disabled>Geri al</button>
+              <button id="clear" class="action-button" disabled>Temizle</button>
+              <button id="spin" class="action-button spin-button" disabled>Döndür</button>
+            </div>
+          </div>
+        </section>
+        <aside class="side-panel" aria-label="Rulet sonucu ve bahisler">
+          <section class="result-area">
+            <span class="section-label">Sonuç</span>
+            <div id="wheel" class="wheel" aria-hidden="true"><div id="result-number" class="wheel-center">–</div></div>
+            <div id="message" class="result-caption" aria-live="polite">Bahislerini masaya yerleştir</div>
+          </section>
+          <section class="history-area">
+            <div class="history-head"><span class="section-label">Son turlar</span><span id="history-count" class="history-count">0 sonuç</span></div>
+            <div id="history" class="history-list"><span class="empty-history">Henüz tur oynanmadı</span></div>
+          </section>
+          <section class="slip-area">
+            <div class="slip-head"><span class="section-label">Bahis kuponu</span><span id="slip-count" class="history-count">0 bahis</span></div>
+            <div id="slip" class="slip-list"><span class="slip-empty">Bahis eklemek için masaya dokun</span></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const redNumbers = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+      const labels = { dozen1: '1. 12', dozen2: '2. 12', dozen3: '3. 12', low: '1–18', even: 'Çift', red: 'Kırmızı', black: 'Siyah', odd: 'Tek', high: '19–36' };
+      const state = { balance: 100000, chip: 100, bets: [], history: [], round: 1, spinning: false };
+      const byId = (id) => document.getElementById(id);
+      const formatMoney = (amount) => `${amount.toLocaleString('tr-TR')} ₺`;
+      const colorOf = (number) => number === 0 ? 'green' : redNumbers.has(number) ? 'red' : 'black';
+      const board = byId('board');
+      const zero = document.createElement('button');
+      zero.className = 'zero-cell';
+      zero.dataset.bet = 'number:0';
+      zero.setAttribute('aria-label', '0 sayısına bahis');
+      zero.textContent = '0';
+      board.append(zero);
+
+      for (let column = 0; column < 12; column += 1) {
+        for (const rowOffset of [3, 2, 1]) {
+          const number = column * 3 + rowOffset;
+          const cell = document.createElement('button');
+          cell.className = `number-cell ${colorOf(number)}`;
+          cell.dataset.bet = `number:${number}`;
+          cell.style.gridColumn = String(column + 2);
+          cell.style.gridRow = String(4 - rowOffset);
+          cell.setAttribute('aria-label', `${number} sayısına bahis, ${colorOf(number) === 'red' ? 'kırmızı' : 'siyah'}`);
+          cell.textContent = String(number);
+          board.append(cell);
+        }
+      }
+
+      function render() {
+        byId('balance').textContent = formatMoney(state.balance);
+        byId('round').textContent = String(state.round).padStart(2, '0');
+        const total = state.bets.reduce((sum, bet) => sum + bet.amount, 0);
+        byId('total-bet').textContent = formatMoney(total);
+        byId('undo').disabled = state.spinning || state.bets.length === 0;
+        byId('clear').disabled = state.spinning || state.bets.length === 0;
+        byId('spin').disabled = state.spinning || total === 0;
+        byId('slip-count').textContent = `${state.bets.length} bahis`;
+        const slip = byId('slip');
+        slip.replaceChildren();
+        if (state.bets.length === 0) {
+          const empty = document.createElement('span');
+          empty.className = 'slip-empty';
+          empty.textContent = 'Bahis eklemek için masaya dokun';
+          slip.append(empty);
+        } else {
+          state.bets.forEach((bet, index) => {
+            const row = document.createElement('div');
+            row.className = 'slip-item';
+            const label = document.createElement('span');
+            label.textContent = `${bet.label} · ${formatMoney(bet.amount)}`;
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.textContent = '×';
+            remove.setAttribute('aria-label', `${bet.label} bahsini kaldır`);
+            remove.disabled = state.spinning;
+            remove.addEventListener('click', () => removeBet(index));
+            row.append(label, remove);
+            slip.append(row);
+          });
+        }
+        document.querySelectorAll('[data-bet]').forEach((button) => {
+          const key = button.dataset.bet;
+          const count = state.bets.filter((bet) => bet.key === key).length;
+          const existing = button.querySelector('.bet-mark');
+          if (existing) existing.remove();
+          if (count > 0 && key.startsWith('number:')) {
+            const marker = document.createElement('span');
+            marker.className = 'bet-mark';
+            marker.textContent = String(count);
+            button.append(marker);
+          }
+          button.classList.toggle('selected', count > 0 && !key.startsWith('number:'));
+          button.disabled = state.spinning;
+        });
+        byId('history-count').textContent = `${state.history.length} sonuç`;
+        const history = byId('history');
+        history.replaceChildren();
+        if (state.history.length === 0) {
+          const empty = document.createElement('span');
+          empty.className = 'empty-history';
+          empty.textContent = 'Henüz tur oynanmadı';
+          history.append(empty);
+        } else {
+          state.history.forEach((number) => {
+            const item = document.createElement('span');
+            item.className = `history-number ${colorOf(number)}`;
+            item.textContent = String(number);
+            item.title = `${number} · ${colorOf(number) === 'green' ? 'Yeşil' : colorOf(number) === 'red' ? 'Kırmızı' : 'Siyah'}`;
+            history.append(item);
+          });
+        }
+      }
+
+      function addBet(key) {
+        if (state.spinning || state.balance < state.chip) return;
+        const isNumber = key.startsWith('number:');
+        const label = isNumber ? key.slice(7) : labels[key];
+        state.balance -= state.chip;
+        state.bets.push({ key, label, amount: state.chip });
+        byId('message').className = 'result-caption';
+        byId('message').textContent = 'Bahislerini masaya yerleştir';
+        render();
+      }
+
+      function removeBet(index) {
+        const [bet] = state.bets.splice(index, 1);
+        if (bet) state.balance += bet.amount;
+        render();
+      }
+
+      function wins(bet, result) {
+        if (bet.key.startsWith('number:')) return Number(bet.key.slice(7)) === result;
+        if (result === 0) return false;
+        if (bet.key === 'red') return redNumbers.has(result);
+        if (bet.key === 'black') return !redNumbers.has(result);
+        if (bet.key === 'even') return result % 2 === 0;
+        if (bet.key === 'odd') return result % 2 === 1;
+        if (bet.key === 'low') return result <= 18;
+        if (bet.key === 'high') return result >= 19;
+        if (bet.key === 'dozen1') return result <= 12;
+        if (bet.key === 'dozen2') return result >= 13 && result <= 24;
+        if (bet.key === 'dozen3') return result >= 25;
+        return false;
+      }
+
+      function payout(bet) {
+        if (bet.key.startsWith('number:')) return bet.amount * 36;
+        if (bet.key.startsWith('dozen')) return bet.amount * 3;
+        return bet.amount * 2;
+      }
+
+      document.querySelectorAll('.chip').forEach((button) => {
+        button.addEventListener('click', () => {
+          state.chip = Number(button.dataset.chip);
+          document.querySelectorAll('.chip').forEach((chip) => {
+            const active = chip === button;
+            chip.classList.toggle('active', active);
+            chip.setAttribute('aria-pressed', String(active));
+          });
+        });
+      });
+      document.querySelectorAll('[data-bet]').forEach((button) => button.addEventListener('click', () => addBet(button.dataset.bet)));
+      byId('undo').addEventListener('click', () => removeBet(state.bets.length - 1));
+      byId('clear').addEventListener('click', () => {
+        state.balance += state.bets.reduce((sum, bet) => sum + bet.amount, 0);
+        state.bets = [];
+        render();
+      });
+      byId('spin').addEventListener('click', () => {
+        if (state.spinning || state.bets.length === 0) return;
+        state.spinning = true;
+        byId('message').className = 'result-caption';
+        byId('message').textContent = 'Rulet dönüyor…';
+        byId('wheel').classList.remove('spinning');
+        void byId('wheel').offsetWidth;
+        byId('wheel').classList.add('spinning');
+        render();
+        window.setTimeout(() => {
+          const result = Math.floor(Math.random() * 37);
+          const won = state.bets.reduce((sum, bet) => sum + (wins(bet, result) ? payout(bet) : 0), 0);
+          state.balance += won;
+          state.history.unshift(result);
+          state.history = state.history.slice(0, 12);
+          state.bets = [];
+          state.round += 1;
+          state.spinning = false;
+          byId('result-number').textContent = String(result);
+          byId('message').className = `result-caption ${won > 0 ? 'win' : 'loss'}`;
+          byId('message').textContent = won > 0 ? `Kazanç ${formatMoney(won)}` : `${result} geldi · Bu tur kazanç yok`;
+          render();
+        }, 1250);
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
